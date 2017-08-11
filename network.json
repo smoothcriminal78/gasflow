@@ -1,0 +1,15 @@
+{
+"source": [{ "_id": 1, "q": "", "p": 5.0, "incidents": [5]},
+	   { "_id": 2, "q": "", "p": 5.0, "incidents": [6]}],
+"consumer": [{ "_id": 3, "q": 100.0, "p": "", "incidents": [8]},
+             { "_id": 4, "q": 100.0, "p": "", "incidents": [9]}],
+"valve": [{ "_id": 10, "closed": 0, "incidents": [7,11]},
+	  { "_id": 13, "closed": 1, "incidents": [9,12]}],
+"pipe": [{ "_id": 5, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [1,7]},
+       	 { "_id": 6, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [2,7]},
+       	 { "_id": 11, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [10,8,9]},
+       	 { "_id": 7, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [5,6,10]},
+       	 { "_id": 8, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [3,11]},
+       	 { "_id": 9, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [13,11]},
+       	 { "_id": 12, "length": 100.0, "diameter": 50.0, "roughness" : 0.1, "incidents": [13,11]}]
+}
