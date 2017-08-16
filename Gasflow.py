@@ -2,12 +2,16 @@ import json
 from math import *
 gas_viscosity = 14.3 * 10 ** -6 # standard conditions
 gas_density = 0.73 # standard conditions
-gas_temp = 273.5
-roughness = 0.1
+gas_temp = 293.5
+roughness = 0.01
 air_temp = 293.15
 
 class Node(object):
-
+    """
+    Args:
+        q - consumption
+        p - in pressure
+    """
     def __init__(self, id, incidents, q, p):
         self._id = id
         self.incidents = incidents
@@ -15,31 +19,33 @@ class Node(object):
         self.p = p
 
     def __str__(self):
-        return 'Node'
+        return 'Id {} Volume {} Pressure {}'.format(self._id, self.q, self.p)
 
 class Consumer(Node):
-    """
-    Args:
-        q - consumption
-        p - in pressure
-    """
     def __init__(self, data):
         Node.__init__(self, data['_id'], data['incidents'], data['q'], data['p'])
 
     def __str__(self):
-        return 'Consumer: Id {} Volume {} Pressure {}'.format(self._id, self.q, self.p)
+        return 'Consumer: ' + Node.__str__(self)
 
 class Source(Node):
-    """
-    Args:
-        q - distrib volume
-        p - out pressure
-    """
     def __init__(self, data):
         Node.__init__(self, data['_id'], data['incidents'], data['q'], data['p'])
 
     def __str__(self):
-        return 'Source: Id {} Volume {} Pressure {}'.format(self._id, self.q, self.p)
+        return 'Source: ' + Node.__str__(self)
+
+class Valve(Node):
+    """
+    Args:
+        closed: 1 closed, 0 opened
+    """
+    def __init__(self, data):
+        Node.__init__(self, data['_id'], data['incidents'], 0, 0)
+        self.closed = bool(data['closed'])
+
+    def __str__(self):
+        return 'Valve: Id {} closed {}'.format(self._id, self.closed)
 
 class Pipe(Node):
     """
@@ -55,45 +61,35 @@ class Pipe(Node):
         self.roughness = data['roughness']
 
     def __str__(self):
-        return 'Pipe:\nId {}\nLength {}\nDiameter {}'.format(self._id, self.length, self.diameter)
+        return 'Pipe: ' + Node.__str__(self) + '\nLength {}\nDiameter {}'.format(self.length, self.diameter)
 
     """ Re number """
-    def getFrictionCoef():
-        re_num = (0.0354 * self.q) / (self.diameter * gas_viscosity)
+    def getFrictionCoef(self):
+        re_num = (0.0354 * self.q) / (self.diameter / 10 * gas_viscosity)
+        d = self.diameter / 10
         coef = 0
         if re_num <= 2000: # laminar mode
-            coef = 64 / re_nu
+            coef = 64 / re_num
         elif re_num > 2000 and re_num <= 4000: # critical mode
             coef = 0.0025 * (re_num * 0.333)
         else:
-            if re_num * (roughness / self.diameter): # pipe wall smoothness
+            if re_num * (roughness / self.diameter / 10): # pipe wall smoothness
                 if re_num > 4000 and re_num <= 100000:
                     coef = 0.3164 / (re_num * 0.25)
                 else:
                     coef = 1 / ((1.82 * log10(re_num) - 1.64) ** 2)
             else:
-                coef = 0.11 * ((roughness / self.diameter + 68 / re_num) ** 0.25)
+                coef = 0.11 * (roughness / d + 68 / re_num) ** 0.25
+        return coef
 
     """ Avg compressibility of gas """
-    def getCompressibilityCoef():
-        a1 = -0.39 +
-        1 +
+    def getCompressibilityCoef(self):
+        return 1 # TODO use formula
 
-    def getPressureDrop():
-        fc = getFrictionCoef()
-        4.324 * 10 ** -7 * fc * self.q * abs(self.q) * gas_density * self.length * gas_temp / d ** 5
-
-class Valve(Node):
-    """
-    Args:
-        closed: 1 closed, 0 opened
-    """
-    def __init__(self, data):
-        Node.__init__(self, data['_id'], data['incidents'], 0, 0)
-        self.closed = bool(data['closed'])
-
-    def __str__(self):
-        return 'Valve: Id {} closed {}'.format(self._id, self.closed)
+    def getPressureDrop(self):
+        fc = self.getFrictionCoef()
+        d = self.diameter / 10
+        return 4.324 * 10 ** -7 * fc * self.q * abs(self.q) * gas_density * self.length * gas_temp / d ** 5
 
 with open('D:\python\gasflow\\network.json') as data_file:
     data = json.load(data_file)
@@ -147,8 +143,12 @@ g = buildGraph()
 def findDistribution():
     return [findPath(s, c) for s in sources for c in consumers]
 
-# def calcPressureDrop():
+# flows = findDistribution()
+# for f in flows:
+#     print([(i._id, i.q) for i in f])
 
-flows = findDistribution()
-for f in flows:
-    print([(i._id, i.q) for i in f])
+pipe = pipes[0]
+pipe.q = 1000
+pipe.p = 5
+print(pipe)
+print(pipe.p - pipe.getPressureDrop())
